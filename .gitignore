@@ -26,3 +26,8 @@
 *.exe
 *.out
 *.app
+Tri.pro.user
+imageviewer.pro.user
+project.pbxproj
+Imageviewer/imageviewer.build
+Info.plist
