@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <iostream>
 #include <algorithm>
 using std::ifstream;
 using std::string;
@@ -36,6 +37,10 @@ TriangleDB::TriangleDB()
 
 TriangleDB::TriangleDB(string filename) {
     ifstream infile(filename);
+    if(!infile) {
+        std::cout << "File (" << filename << ") does not exist!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
 
     string line;
     while (getline(infile, line)) {

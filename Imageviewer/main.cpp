@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    TriangleDB tdb("/Volumes/HDD/Downloads/821-Agnes_hand_-_uniform_remeshing/821_Agnes_hand_300ktriangles_uniform.obj");
+    TriangleDB tdb("/Users/rainerschlonvoigt/Downloads/821-Agnes_hand_-_uniform_remeshing/821_Agnes_hand_300ktriangles_uniform.obj");
 
     QSize fbSize = QGuiApplication::primaryScreen()->availableSize()*0.9;
     Framebuffer fb(fbSize.width(), fbSize.height());
