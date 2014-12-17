@@ -1,7 +1,8 @@
 #include "framebuffer.h"
 #include <limits>
 
-Framebuffer::Framebuffer(int width, int height)
+Framebuffer::Framebuffer(int width, int height, bool useZBuffer)
+:useZBuffering(useZBuffer)
 {
     reset(width, height);
 }
@@ -10,12 +11,8 @@ void Framebuffer::reset(int width, int height) {
     this->width = width;
     this->height = height;
 
-    q = std::make_shared<QImage>(width, height, QImage::Format_RGB32);
-    zBuffer.clear();
-    zBuffer.resize(width);
-    for(auto& i : zBuffer) {
-        i.resize(height);
-    }
+    color.resize(height*width*3);
+    zBuffer.resize(height*width);
     clear();
 }
 
@@ -28,53 +25,64 @@ void Framebuffer::setDimensions(int width, int height) {
 }
 
 void Framebuffer::clear() {
-    q->fill(qRgb(0,0,0));
-
-    for(auto& i : zBuffer) {
-        for(auto& wrap : i) {
-            wrap._a = -std::numeric_limits<double>::max();
-        }
-    }
+    std::fill(color.begin(), color.end(), 0);
+    
+    if (useZBuffering)
+        std::fill(zBuffer.begin(), zBuffer.end(), -std::numeric_limits<double>::max());
 }
 
-int Framebuffer::getWidth() const {
+uint16_t Framebuffer::getWidth() const {
     return this->width;
 }
 
-int Framebuffer::getHeight() const {
+uint16_t Framebuffer::getHeight() const {
     return this->height;
 }
 
-const QImage& Framebuffer::getImage() const {
-    return *q;
+const uint8_t* Framebuffer::getImage() const {
+    if (color.size() > 0) {
+        return &color[0];
+    }
+    
+    return nullptr;
 }
 
-bool Framebuffer::tryZBufferWrite(const Vec3D& pos) {
-    const double& x = pos.x;
-    const double& y = pos.y;
+bool Framebuffer::tryZBufferWrite(const vec_t& x, const vec_t& y, const vec_t& z) {
+    if (!useZBuffering)
+        return true;
 
-    if(x < 0 || x > width-1 || y < 0 || y > height-1)
-        return false;
-
-    atomic<double>& current = zBuffer[x][y]._a;
+    atomic<double>& current = zBuffer[zIndexForPos(x, y)]._a;
     double currentVal = current.load();
-    while(pos.z > currentVal) {
-        if(current.compare_exchange_strong(currentVal, pos.z))
+    while(z > currentVal) {
+        if(current.compare_exchange_strong(currentVal, z))
             return true;
-        else {
+        else
             currentVal = current.load();
-        }
     }
     return false;
 }
 
-void Framebuffer::setPixel(const Vec3D& pos, QRgb index_or_rgb) {
-    const double& x = pos.x;
-    const double& y = pos.y;
+size_t Framebuffer::zIndexForPos(const vec_t& x, const vec_t& y) {
+    return (this->height-1-y)*width + x;
+}
 
+size_t Framebuffer::cIndexForPos(const vec_t& x, const vec_t& y) {
+    return (height-1-y)*width*3 + x*3;
+}
+
+void Framebuffer::setPixel(const vec_t& x, const vec_t& y, const vec_t& z, const uint8_t (&c)[3]) {
     if(x < 0 || x > width-1 || y < 0 || y > height-1)
         return;
+    
+    if (tryZBufferWrite(x, y, z)) {
+        size_t index = cIndexForPos(x, y);
+        color[index + 0] = c[0];
+        color[index + 1] = c[1];
+        color[index + 2] = c[2];
+    }
+}
 
-    q->setPixel(x, this->height-1-y, index_or_rgb);
+void Framebuffer::setPixel(const Vec3D& pos, const uint8_t (&c)[3]) {
+    return setPixel(pos.x, pos.y, pos.z, c);
 }
 

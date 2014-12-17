@@ -1,7 +1,7 @@
 #ifndef TRIANGLEDB_H
 #define TRIANGLEDB_H
 
-#include "../../MasterThesis/source/Server/vec3d.h"
+#include "vec3d.h"
 #include <vector>
 #include <string>
 #include <utility>
@@ -9,7 +9,8 @@ using std::pair;
 using std::string;
 using std::vector;
 
-typedef pair<double, double> minMaxType;
+typedef pair<vec_t, vec_t> minMaxType;
+typedef uint32_t vindex_t;
 
 class TriangleDB
 {
@@ -18,7 +19,7 @@ class TriangleDB
 public:
     vector<Vec3D> vertices;
     vector<Vec3D> normals;
-    vector<uint32_t> triangleIndexes;
+    vector<vindex_t> triangleIndexes;
 
     TriangleDB();
     TriangleDB(string filename);

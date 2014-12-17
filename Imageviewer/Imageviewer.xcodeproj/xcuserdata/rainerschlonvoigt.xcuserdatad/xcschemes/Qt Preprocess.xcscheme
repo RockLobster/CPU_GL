@@ -14,7 +14,7 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7DB91E0C4295EDA7DB81A782"
+               BlueprintIdentifier = "134FAA15CA20A7BA4F6E240E"
                BuildableName = "Qt Preprocess"
                BlueprintName = "Qt Preprocess"
                ReferencedContainer = "container:Imageviewer.xcodeproj">
@@ -42,7 +42,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7DB91E0C4295EDA7DB81A782"
+            BlueprintIdentifier = "134FAA15CA20A7BA4F6E240E"
             BuildableName = "Qt Preprocess"
             BlueprintName = "Qt Preprocess"
             ReferencedContainer = "container:Imageviewer.xcodeproj">
@@ -60,7 +60,7 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7DB91E0C4295EDA7DB81A782"
+            BlueprintIdentifier = "134FAA15CA20A7BA4F6E240E"
             BuildableName = "Qt Preprocess"
             BlueprintName = "Qt Preprocess"
             ReferencedContainer = "container:Imageviewer.xcodeproj">

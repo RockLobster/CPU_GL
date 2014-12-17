@@ -6,6 +6,7 @@
 #include "triangledrawer.h"
 #include "imageviewer.h"
 #include <time.h>
+#include <thread>
 #include <QObject>
 
 class AnimatedDrawer : public QObject
@@ -14,16 +15,21 @@ class AnimatedDrawer : public QObject
 
     Framebuffer& fb;
     ImageViewer& viewer;
-    const TriangleDB& tdb;
+    shared_ptr<TriangleDB> tdb;
+    TriangleDrawer drawer;
 
     time_t refSeconds;
 
     Matrix4x4 translMat;
     Matrix4x4 projMatrix;
     QTimer* animationTimer;
+    
+    bool _canceled;
+    void loop();
+    shared_ptr<std::thread> loopThread;
 
 public:
-    AnimatedDrawer(Framebuffer& fb, ImageViewer& viewer, const TriangleDB& tdb);
+    AnimatedDrawer(Framebuffer& fb, ImageViewer& viewer, shared_ptr<TriangleDB> tdb);
     ~AnimatedDrawer();
 
     void start();
@@ -31,6 +37,7 @@ public:
 
 public slots:
     void update();
+    
 };
 
 #endif // ANIMATEDDRAWER_H

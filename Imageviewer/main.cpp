@@ -47,6 +47,7 @@
 #include "framebuffer.h"
 #include "triangledrawer.h"
 #include "animateddrawer.h"
+#include <memory>
 
 int main(int argc, char *argv[])
 {
@@ -62,10 +63,11 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    TriangleDB tdb("/Users/rainerschlonvoigt/Downloads/821-Agnes_hand_-_uniform_remeshing/821_Agnes_hand_300ktriangles_uniform.obj");
+    shared_ptr<TriangleDB> tdb = std::make_shared<TriangleDB>("/Users/rainerschlonvoigt/Downloads/821-Agnes_hand_-_uniform_remeshing/821_Agnes_hand_300ktriangles_uniform.obj");
 
     QSize fbSize = QGuiApplication::primaryScreen()->availableSize()*0.9;
-    Framebuffer fb(fbSize.width(), fbSize.height());
+    //Framebuffer fb(fbSize.width(), fbSize.height(), false);
+    Framebuffer fb(fbSize.width(), fbSize.height(), true);
     AnimatedDrawer anim(fb, imageViewer, tdb);
     anim.start();
 

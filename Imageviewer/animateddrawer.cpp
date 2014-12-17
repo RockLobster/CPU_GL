@@ -10,7 +10,7 @@ Matrix4x4 autoProjMatrix(const Framebuffer &target, const TriangleDB &tdb) {
     double yrWidth = yDims.second - yDims.first;
     double dataAspectRatio = xrWidth/yrWidth;
 
-    const double testMulti = 1.2;
+    const double testMulti = 0.8;
 
     double nw, nh;
     if(aspectRatio/dataAspectRatio > 1.0) {
@@ -25,11 +25,11 @@ Matrix4x4 autoProjMatrix(const Framebuffer &target, const TriangleDB &tdb) {
     return Matrix4x4::orthoProjectionMatrix(nw, nh);
 }
 
-AnimatedDrawer::AnimatedDrawer(Framebuffer &fb, ImageViewer &viewer, const TriangleDB &tdb)
+AnimatedDrawer::AnimatedDrawer(Framebuffer &fb, ImageViewer &viewer, shared_ptr<TriangleDB> tdb)
     :QObject(0), fb(fb), viewer(viewer), tdb(tdb) {
 
-    translMat  = Matrix4x4::translationMatrix(tdb.getCenter());
-    projMatrix = autoProjMatrix(fb, tdb);
+    translMat  = Matrix4x4::translationMatrix(tdb->getCenter());
+    projMatrix = autoProjMatrix(fb, *tdb);
     refSeconds = time(NULL);
     update();
 }
@@ -45,21 +45,39 @@ void AnimatedDrawer::update() {
 
     Matrix4x4 mvMatrix = translMat * Matrix4x4::yRotMatrix(10*seconds) * translMat.inverted();
 
-    TriangleDrawer::draw(fb, tdb, projMatrix, mvMatrix);
-    //TriangleDrawer::drawWireframe(fb, tdb, projMatrix, mvMatrix);
-    viewer.loadPixmap(QPixmap::fromImage(fb.getImage()));
+    drawer.draw(fb, *tdb, projMatrix, mvMatrix);
+    //drawer.drawWireframe(fb, *tdb, projMatrix, mvMatrix);
+    
+    QImage img(fb.getImage(), fb.getWidth(), fb.getHeight(), QImage::Format_RGB888);
+    viewer.loadPixmap(QPixmap::fromImage(img));
+}
+
+void AnimatedDrawer::loop() {
+    while (!_canceled) {
+        update();
+        std::this_thread::sleep_for(std::chrono::milliseconds(33));
+    }
 }
 
 void AnimatedDrawer::start() {
     if(animationTimer)
         return;
 
-    animationTimer = new QTimer(this);
-    connect(animationTimer, SIGNAL(timeout()), this, SLOT(update()));
-    animationTimer->start(33);
+    _canceled = false;
+    
+    loopThread = std::make_shared<std::thread>(&AnimatedDrawer::loop, this);
+    //animationTimer = new QTimer(this);
+    //connect(animationTimer, SIGNAL(timeout()), this, SLOT(update()));
+    //animationTimer->start(1);
 }
 
 void AnimatedDrawer::stop() {
+    _canceled = true;
+    if (loopThread) {
+        loopThread->join();
+        loopThread.reset();
+    }
+    
     if(animationTimer) {
         animationTimer->stop();
         animationTimer->deleteLater();

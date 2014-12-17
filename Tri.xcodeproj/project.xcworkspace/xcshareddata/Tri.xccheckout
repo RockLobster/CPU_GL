@@ -5,25 +5,41 @@
 	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
 	<false/>
 	<key>IDESourceControlProjectIdentifier</key>
-	<string>BD04BFB4-D965-4A9A-A47C-853B2B7C7810</string>
+	<string>F5639388-803D-4AE2-825E-0FA72BA8D4EC</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Tri</string>
 	<key>IDESourceControlProjectOriginsDictionary</key>
 	<dict>
 		<key>7340393086DBABF8BAF2F467871A812BC3F0CA94</key>
 		<string>https://github.com/RockLobster/MasterThesis.git</string>
+		<key>A6C01ADEAC669698F72A08FD16F9CBB5AF99A0B0</key>
+		<string>https://github.com/RockLobster/CPU_GL.git</string>
 	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Tri.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>7340393086DBABF8BAF2F467871A812BC3F0CA94</key>
-		<string>MasterThesis/</string>
+		<string>../../../MasterThesis</string>
+		<key>A6C01ADEAC669698F72A08FD16F9CBB5AF99A0B0</key>
+		<string>../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
-	<string>https://github.com/RockLobster/MasterThesis.git</string>
+	<string>https://github.com/RockLobster/CPU_GL.git</string>
 	<key>IDESourceControlProjectVersion</key>
 	<integer>111</integer>
 	<key>IDESourceControlProjectWCCIdentifier</key>
-	<string>7340393086DBABF8BAF2F467871A812BC3F0CA94</string>
+	<string>A6C01ADEAC669698F72A08FD16F9CBB5AF99A0B0</string>
 	<key>IDESourceControlProjectWCConfigurations</key>
 	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>A6C01ADEAC669698F72A08FD16F9CBB5AF99A0B0</string>
+			<key>IDESourceControlWCCName</key>
+			<string>CPU_GL</string>
+		</dict>
 		<dict>
 			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
 			<string>public.vcs.git</string>
