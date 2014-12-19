@@ -13,6 +13,13 @@ void Framebuffer::reset(int width, int height) {
 
     color.resize(height*width*3);
     zBuffer.resize(height*width);
+
+#if USE_ATOMS
+#else
+    vector<mutex> locksNew(height*width);
+    locks.swap(locksNew);
+#endif
+
     clear();
 }
 
@@ -26,7 +33,7 @@ void Framebuffer::setDimensions(int width, int height) {
 
 void Framebuffer::clear() {
     std::fill(color.begin(), color.end(), 0);
-    
+
     if (useZBuffering)
         std::fill(zBuffer.begin(), zBuffer.end(), -std::numeric_limits<double>::max());
 }
@@ -46,7 +53,7 @@ const uint8_t* Framebuffer::getImage() const {
     
     return nullptr;
 }
-
+#if USE_ATOMS
 bool Framebuffer::tryZBufferWrite(const vec_t& x, const vec_t& y, const vec_t& z) {
     if (!useZBuffering)
         return true;
@@ -61,25 +68,47 @@ bool Framebuffer::tryZBufferWrite(const vec_t& x, const vec_t& y, const vec_t& z
     }
     return false;
 }
+#endif
 
 size_t Framebuffer::zIndexForPos(const vec_t& x, const vec_t& y) {
-    return (this->height-1-y)*width + x;
+    return y*width + x;
 }
 
 size_t Framebuffer::cIndexForPos(const vec_t& x, const vec_t& y) {
-    return (height-1-y)*width*3 + x*3;
+    return y*width*3 + x*3;
 }
 
 void Framebuffer::setPixel(const vec_t& x, const vec_t& y, const vec_t& z, const uint8_t (&c)[3]) {
     if(x < 0 || x > width-1 || y < 0 || y > height-1)
         return;
     
+#if USE_ATOMS
     if (tryZBufferWrite(x, y, z)) {
         size_t index = cIndexForPos(x, y);
         color[index + 0] = c[0];
         color[index + 1] = c[1];
         color[index + 2] = c[2];
     }
+#else
+    size_t index = zIndexForPos(x, y);
+
+    std::lock_guard<mutex> lock(locks[index]);
+
+    bool writeColor = false;
+    if(!useZBuffering)
+        writeColor = true;
+    else if(zBuffer[index] < z) {
+        zBuffer[index] = z;
+        writeColor = true;
+    }
+
+    if(writeColor) {
+        size_t index = cIndexForPos(x, y);
+        color[index + 0] = c[0];
+        color[index + 1] = c[1];
+        color[index + 2] = c[2];
+    }
+#endif
 }
 
 void Framebuffer::setPixel(const Vec3D& pos, const uint8_t (&c)[3]) {

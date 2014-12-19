@@ -220,8 +220,8 @@ void TriangleDrawer::drawWireframe(Framebuffer &target, const TriangleDB &tdb, c
     });
 }
 
-#define RANGE_CHECK 1
-#define BACK_FACE_CULLING 0
+#define RANGE_CHECK 0
+#define BACK_FACE_CULLING 1
 void TriangleDrawer::draw(Framebuffer &target, const TriangleDB &tdb, const Matrix4x4& pMatrix, const Matrix4x4& mvMatrix) {
     Vec3D lightDir = (Vec3D(0,0,0) - tdb.getCenter()).getNormalized();
 
@@ -232,19 +232,23 @@ void TriangleDrawer::draw(Framebuffer &target, const TriangleDB &tdb, const Matr
     _rendVs.resize(tdb.vertices.size());
     _rendNs.resize(tdb.normals.size());
     
-    for (size_t index = 0; index < tdb.vertices.size(); index++) {
-    //parallelFor(tdb.vertices.size(), [&](size_t index){
+    //for (size_t index = 0; index < tdb.vertices.size(); index++) {
+    parallelFor(tdb.vertices.size(), [&](size_t index){
         _rendVs[index] = ndcToPix(target, pmvMatrix * tdb.vertices[index]);
         _rendNs[index] = normalMat * Vec4D(tdb.normals[index], 0);
-    //});
-    }
+    });
+    //}
 
-    //parallelFor(tdb.triangleIndexes.size()/3, [&](size_t i) {
-    for (size_t i = 0; i < tdb.triangleIndexes.size()/3; i++) {
+    parallelFor(tdb.triangleIndexes.size()/3, [&](size_t i) {
+    //for (size_t i = 0; i < tdb.triangleIndexes.size()/3; i++) {
         const uint32_t& index1 = tdb.triangleIndexes[i*3 + 0];
         const uint32_t& index2 = tdb.triangleIndexes[i*3 + 1];
         const uint32_t& index3 = tdb.triangleIndexes[i*3 + 2];
 
+        vector<VertexInfo> triVert = {
+            {_rendVs[index1], _rendNs[index1]},
+            {_rendVs[index2], _rendNs[index2]},
+            {_rendVs[index3], _rendNs[index3]}};
 
 #if BACK_FACE_CULLING
         const Vec3D test(0,0,1);
@@ -255,22 +259,18 @@ void TriangleDrawer::draw(Framebuffer &target, const TriangleDB &tdb, const Matr
         }
 #endif
 
+        drawFuncType drawingFunc;
         int firstRange, secondRange;
         float alpha1, alpha2;
         VertexInfo vi1, vi2;
         int offset;
         
 #if RANGE_CHECK
-        vector<VertexInfo> triVert = {{_rendVs[index1], _rendNs[index1]},
-            {_rendVs[index2], _rendNs[index2]},
-            {_rendVs[index3], _rendNs[index3]}};
         
         std::pair<int, int> minmaxX = std::minmax({triVert[0].pos.x, triVert[1].pos.x, triVert[2].pos.x});
         std::pair<int, int> minmaxY = std::minmax({triVert[0].pos.y, triVert[1].pos.y, triVert[2].pos.y});
         int xRange = 1 + minmaxX.second - minmaxX.first;
         int yRange = 1 + minmaxY.second - minmaxY.first;
-        
-        drawFuncType drawingFunc;
         
         if(xRange >= yRange) {
             std::sort(triVert.begin(), triVert.end(), yMinCompVi);
@@ -284,7 +284,21 @@ void TriangleDrawer::draw(Framebuffer &target, const TriangleDB &tdb, const Matr
             secondRange = triVert[2].pos.x - triVert[1].pos.x;
             drawingFunc = drawVerticallLine;
         }
-        
+#else
+        if(false) {
+            std::sort(triVert.begin(), triVert.end(), yMinCompVi);
+            firstRange  = triVert[1].pos.y - triVert[0].pos.y;
+            secondRange = triVert[2].pos.y - triVert[1].pos.y;
+            drawingFunc = drawHorizontalLine;
+        }
+        else {
+            std::sort(triVert.begin(), triVert.end(), xMinCompVi);
+            firstRange  = triVert[1].pos.x - triVert[0].pos.x;
+            secondRange = triVert[2].pos.x - triVert[1].pos.x;
+            drawingFunc = drawVerticallLine;
+        }
+#endif
+
         drawingFunc(target, triVert[0], triVert[0], lightDir);
         for(offset = 1; offset <= firstRange; offset++) {
             alpha1 = ((float)offset)/firstRange;
@@ -300,33 +314,7 @@ void TriangleDrawer::draw(Framebuffer &target, const TriangleDB &tdb, const Matr
             vi2 = interpolate(triVert[0], triVert[2], alpha2);
             drawingFunc(target, vi1, vi2, lightDir);
         }
-        
-#else
-        vector<uint32_t> triVert = {index1, index2, index3};
-        
-        std::sort(triVert.begin(), triVert.end(), *this);
-        firstRange  = _rendVs[triVert[1]].x - _rendVs[triVert[0]].x;
-        secondRange = _rendVs[triVert[2]].x - _rendVs[triVert[1]].x;
-        
-        
-        
-        drawVerticallLine(target, vi0, vi0, lightDir);
-        for(offset = 1; offset <= firstRange; offset++) {
-            alpha1 = ((float)offset)/firstRange;
-            alpha2 = ((float)offset)/(firstRange+secondRange);
-            vi1 = interpolate(vi0, _rendVs[triVert[1]], _rendNs[triVert[1]], alpha1);
-            vi2 = interpolate(vi0, _rendVs[triVert[2]], _rendNs[triVert[2]], alpha2);
-            drawVerticallLine(target, vi1, vi2, lightDir);
-        }
-        for(offset = 1; offset <= secondRange; offset++) {
-            alpha1 = ((float)offset)/secondRange;
-            alpha2 = ((float)offset+firstRange)/(firstRange+secondRange);
-            vi1 = interpolate(triVert[1], triVert[2], alpha1);
-            vi2 = interpolate(triVert[0], triVert[2], alpha2);
-            drawVerticallLine(target, vi1, vi2, lightDir);
-        }
-        
-#endif
-    }
-    //});
+
+    //}
+    });
 }

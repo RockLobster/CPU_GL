@@ -8,6 +8,9 @@
 #include <time.h>
 #include <thread>
 #include <QObject>
+#include <chrono>
+using std::chrono::high_resolution_clock;
+using std::chrono::duration_cast;
 
 class AnimatedDrawer : public QObject
 {
@@ -18,7 +21,7 @@ class AnimatedDrawer : public QObject
     shared_ptr<TriangleDB> tdb;
     TriangleDrawer drawer;
 
-    time_t refSeconds;
+    high_resolution_clock::time_point refSeconds;
 
     Matrix4x4 translMat;
     Matrix4x4 projMatrix;

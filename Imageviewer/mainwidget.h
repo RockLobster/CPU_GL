@@ -3,7 +3,7 @@
 ** Copyright (C) 2014 Digia Plc and/or its subsidiary(-ies).
 ** Contact: http://www.qt-project.org/legal
 **
-** This file is part of the examples of the Qt Toolkit.
+** This file is part of the QtCore module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -38,30 +38,56 @@
 **
 ****************************************************************************/
 
-#include <QApplication>
-#include <QCommandLineParser>
-#include <QVBoxLayout>
-#include <QScreen>
+#ifndef MAINWIDGET_H
+#define MAINWIDGET_H
 
-#include "imageviewer.h"
-#include "triangledb.h"
+#include <QOpenGLWidget>
+#include <QOpenGLFunctions>
+#include <QMatrix4x4>
+#include <QQuaternion>
+#include <QVector2D>
+#include <QBasicTimer>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLTexture>
+
 #include "framebuffer.h"
-#include "mainwidget.h"
-#include <memory>
+#include "triangledb.h"
+#include "triangledrawer.h"
 
-int main(int argc, char *argv[])
+class MainWidget : public QOpenGLWidget, protected QOpenGLFunctions
 {
-    QApplication app(argc, argv);
-    QGuiApplication::setApplicationDisplayName(ImageViewer::tr("Triangle Viewer"));
+    Q_OBJECT
 
-    auto tdb = std::make_shared<TriangleDB>("/Users/rainerschlonvoigt/Downloads/821-Agnes_hand_-_uniform_remeshing/821_Agnes_hand_300ktriangles_uniform.obj");
+public:
+    explicit MainWidget(QWidget *parent, shared_ptr<Framebuffer> fb, shared_ptr<TriangleDB> tdb);
+    ~MainWidget();
 
-    QSize fbSize = QGuiApplication::primaryScreen()->availableSize()*0.7;
-    auto fb = std::make_shared<Framebuffer>(fbSize.width(), fbSize.height(), true);
+    QSize minimumSizeHint() const Q_DECL_OVERRIDE;
+    QSize sizeHint() const Q_DECL_OVERRIDE;
 
-    MainWidget widget(0, fb, tdb);
-    widget.resize(widget.sizeHint());
-    widget.show();
+protected:
+    void mousePressEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
+    void mouseMoveEvent(QMouseEvent *e) Q_DECL_OVERRIDE;
 
-    return app.exec();
-}
+    void initializeGL() Q_DECL_OVERRIDE;
+    void resizeGL(int w, int h) Q_DECL_OVERRIDE;
+    void paintGL() Q_DECL_OVERRIDE;
+
+private:
+    shared_ptr<Framebuffer> fb;
+    shared_ptr<TriangleDB> tdb;
+    TriangleDrawer drawer;
+    Matrix4x4 translMat;
+    Matrix4x4 projMatrix;
+
+//Rotation stuff
+    void setXRotation(int angle);
+    void setYRotation(int angle);
+    void setZRotation(int angle);
+    int m_xRot;
+    int m_yRot;
+    int m_zRot;
+    QPoint m_lastPos;
+};
+
+#endif // MAINWIDGET_H

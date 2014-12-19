@@ -1,15 +1,18 @@
 #ifndef FRAMEBUFFER_H
 #define FRAMEBUFFER_H
 
-#include <QImage>
 #include <memory>
 #include <vector>
 #include <atomic>
+#include <mutex>
 #include "vec3d.h"
 using std::shared_ptr;
 using std::vector;
 using std::atomic;
+using std::mutex;
 
+#define USE_ATOMS 0
+#if USE_ATOMS
 template <typename T>
 struct atomwrapper
 {
@@ -36,6 +39,7 @@ struct atomwrapper
         _a.store(other._a.load());
     }
 };
+#endif
 
 class Framebuffer
 {
@@ -45,12 +49,18 @@ class Framebuffer
     
     //vector<vector<double>> zBuffer;
     bool useZBuffering;
+
+#if USE_ATOMS
+    bool tryZBufferWrite(const vec_t& x, const vec_t& y, const vec_t& z);
     vector<atomwrapper<double>> zBuffer;
+#else
+    vector<mutex> locks;
+    vector<vec_t> zBuffer;
+#endif
+
     uint16_t width;
     uint16_t height;
 
-    bool tryZBufferWrite(const vec_t& x, const vec_t& y, const vec_t& z);
-    
     void reset(int width, int height);
     size_t zIndexForPos(const vec_t& x, const vec_t& y);
     size_t cIndexForPos(const vec_t& x, const vec_t& y);

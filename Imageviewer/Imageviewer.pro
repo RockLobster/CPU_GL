@@ -10,7 +10,8 @@ HEADERS       = imageviewer.h \
     framebuffer.h \
     triangledb.h \
     triangledrawer.h \
-    animateddrawer.h
+    animateddrawer.h \
+    mainwidget.h
 SOURCES       = imageviewer.cpp \
                 main.cpp \
     ../../MasterThesis/source/Commonlib/matrix4x4.cpp \
@@ -18,7 +19,8 @@ SOURCES       = imageviewer.cpp \
     framebuffer.cpp \
     triangledb.cpp \
     triangledrawer.cpp\
-    animateddrawer.cpp
+    animateddrawer.cpp \
+    mainwidget.cpp
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/widgets/widgets/imageviewer

@@ -1,7 +1,7 @@
 #include "animateddrawer.h"
 #include <QtWidgets>
 
-Matrix4x4 autoProjMatrix(const Framebuffer &target, const TriangleDB &tdb) {
+inline Matrix4x4 autoProjMatrix(const Framebuffer &target, const TriangleDB &tdb) {
     double aspectRatio = ((double)target.getWidth())/target.getHeight();
 
     auto xDims = tdb.minMaxX();
@@ -30,7 +30,7 @@ AnimatedDrawer::AnimatedDrawer(Framebuffer &fb, ImageViewer &viewer, shared_ptr<
 
     translMat  = Matrix4x4::translationMatrix(tdb->getCenter());
     projMatrix = autoProjMatrix(fb, *tdb);
-    refSeconds = time(NULL);
+    refSeconds = high_resolution_clock::now();
     update();
 }
 
@@ -41,9 +41,10 @@ AnimatedDrawer::~AnimatedDrawer() {
 void AnimatedDrawer::update() {
 
     fb.clear();
-    double seconds = difftime(time(NULL), refSeconds);
+    auto refSeconds2 = high_resolution_clock::now();
+    auto time_span = duration_cast<std::chrono::milliseconds>(refSeconds2 - refSeconds).count();
 
-    Matrix4x4 mvMatrix = translMat * Matrix4x4::yRotMatrix(10*seconds) * translMat.inverted();
+    Matrix4x4 mvMatrix = translMat * Matrix4x4::yRotMatrix(10*time_span/1000) * translMat.inverted();
 
     drawer.draw(fb, *tdb, projMatrix, mvMatrix);
     //drawer.drawWireframe(fb, *tdb, projMatrix, mvMatrix);
